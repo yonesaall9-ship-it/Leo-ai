@@ -43,7 +43,7 @@
   <h2>🔒 برنامج ليو (Leo AI)</h2>
   <p style="color: var(--muted);" id="lock-msg">أدخل كلمة السر الخاصة بك للدخول</p>
   <input type="password" id="pass-input" placeholder="كلمة السر...">
-  <button type="button" onclick="handleAuth()">دخول</button>
+  <button type="button" id="login-btn" onclick="handleAuth()">دخول</button>
 </div>
 
 <div id="main-app" style="display: none; flex-direction: column; height: 100%;">
@@ -124,23 +124,13 @@
 </div>
 
 <script>
-  let pendingUrl = "";
-  let sessions = {};
-  let currentSessionId = "";
-
-  window.onload = function() {
-    if (!localStorage.getItem("leo_pass")) {
-      document.getElementById("lock-msg").innerText = "أهلاً يا مخترعي! اعمل كلمة سر جديدة عشان محدش يفتح ليو غيرك:";
-    }
-    document.getElementById("api-key-input").value = localStorage.getItem("leo_api") || "";
-    document.getElementById("global-memory").value = localStorage.getItem("leo_memory") || "";
-    initSessions();
-    renderVault();
-  };
+  var pendingUrl = "";
+  var sessions = {};
+  var currentSessionId = "";
 
   function handleAuth() {
-    const input = document.getElementById("pass-input").value;
-    const saved = localStorage.getItem("leo_pass");
+    var input = document.getElementById("pass-input").value;
+    var saved = localStorage.getItem("leo_pass");
     if (!input) {
       alert("اكتب كلمة السر الأول!");
       return;
@@ -160,6 +150,8 @@
     document.getElementById("lock-screen").classList.remove("active");
     document.getElementById("main-app").style.display = "flex";
     document.getElementById("pass-input").value = "";
+    initSessions();
+    renderVault();
   }
 
   function lockApp() {
@@ -167,33 +159,45 @@
     document.getElementById("lock-screen").classList.add("active");
   }
 
+  window.onload = function() {
+    if (!localStorage.getItem("leo_pass")) {
+      document.getElementById("lock-msg").innerText = "أهلاً يا مخترعي! اعمل كلمة سر جديدة عشان محدش يفتح ليو غيرك:";
+    }
+    document.getElementById("api-key-input").value = localStorage.getItem("leo_api") || "";
+    document.getElementById("global-memory").value = localStorage.getItem("leo_memory") || "";
+  };
+
   function switchTab(tab, btn) {
-    document.querySelectorAll("#main-app .screen").forEach(function(s) { s.classList.remove("active"); });
-    document.querySelectorAll(".nav button").forEach(function(b) { b.classList.remove("active-tab"); });
+    var screens = document.querySelectorAll("#main-app .screen");
+    for (var i = 0; i < screens.length; i++) { screens[i].classList.remove("active"); }
+    var btns = document.querySelectorAll(".nav button");
+    for (var j = 0; j < btns.length; j++) { btns[j].classList.remove("active-tab"); }
     document.getElementById("tab-" + tab).classList.add("active");
     btn.classList.add("active-tab");
   }
 
   function initSessions() {
     sessions = JSON.parse(localStorage.getItem("leo_sessions") || "{}");
-    if (Object.keys(sessions).length === 0) {
-      const id1 = "chat_" + Date.now();
+    var keys = Object.keys(sessions);
+    if (keys.length === 0) {
+      var id1 = "chat_" + Date.now();
       sessions[id1] = { name: "💻 برمجة وأمن سيبراني", messages: [{ sender: "leo", text: "أهلاً بيك في قسم البرمجة والأمن السيبراني! جاهز لأي كود أو شرح بالتفصيل." }] };
-      const id2 = "chat_" + (Date.now() + 1);
+      var id2 = "chat_" + (Date.now() + 1);
       sessions[id2] = { name: "💼 شغل ووظائف ومهام", messages: [{ sender: "leo", text: "أهلاً بيك في قسم الشغل! قولي ندور على إيه النهاردة." }] };
-      const id3 = "chat_" + (Date.now() + 2);
+      var id3 = "chat_" + (Date.now() + 2);
       sessions[id3] = { name: "💬 دردشة عامة وأخبار اليوم", messages: [{ sender: "leo", text: "أهلاً يا صاحبي! أنا متوصل بالإنترنت لحظة بلحظة، اسألني عن أي حاجة بتحصل دلوقتي." }] };
       saveSessions();
+      keys = Object.keys(sessions);
     }
-    currentSessionId = Object.keys(sessions)[0];
-    updateSessionDropdown();
-    renderChat();
-  }
-
-  function updateSessionDropdown() {
-    const sel = document.getElementById("session-select");
-sel.innerHTML = Object.keys(sessions).map(function(id) {
-return <option value="${id}" ${id === currentSessionId ? 'selected' : ''}>${sessions[id].name}</option>;
+0);
+updateSessionDropdown();
+renderChat();
+}
+function updateSessionDropdown() {
+var sel = document.getElementById("session-select");
+var keys = Object.keys(sessions);
+sel.innerHTML = keys.map(function(id) {
+return "<option value='" + id + "' " + (id === currentSessionId ? "selected" : "") + ">" + sessions[id].name + "";
 }).join("");
 }
 function switchSession() {
@@ -201,23 +205,24 @@ currentSessionId = document.getElementById("session-select").value;
 renderChat();
 }
 function newSession() {
-const name = prompt("اكتب اسم المحادثة الجديدة (مثلاً: مذاكرة، تخطيط فرح، إلخ):");
+var name = prompt("اكتب اسم المحادثة الجديدة:");
 if (!name) return;
-const id = "chat_" + Date.now();
-sessions[id] = { name: name, messages: [{ sender: "leo", text: أهلاً بيك في محادثة "${name}"! أنا فاكر كل بياناتك وجاهز أساعدك. }] };
+var id = "chat_" + Date.now();
+sessions[id] = { name: name, messages: [{ sender: "leo", text: "أهلاً بيك في محادثة " + name + "! أنا فاكر كل بياناتك وجاهز أساعدك." }] };
 currentSessionId = id;
 saveSessions();
 updateSessionDropdown();
 renderChat();
 }
 function deleteSession() {
-if (Object.keys(sessions).length <= 1) {
+var keys = Object.keys(sessions);
+if (keys.length <= 1) {
 alert("لازم يكون فيه محادثة واحدة على الأقل!");
 return;
 }
 if (confirm("متأكد إنك عايز تمسح المحادثة دي؟")) {
 delete sessions[currentSessionId];
-currentSessionId = Object.keys(sessions)[0];
+currentSessionId = Object.keys(sessions).at(0);
 saveSessions();
 updateSessionDropdown();
 renderChat();
@@ -227,10 +232,10 @@ function saveSessions() {
 localStorage.setItem("leo_sessions", JSON.stringify(sessions));
 }
 function renderChat() {
-const box = document.getElementById("chat-box");
-const msgs = (sessions[currentSessionId] && sessions[currentSessionId].messages) || [];
+var box = document.getElementById("chat-box");
+var msgs = (sessions[currentSessionId] && sessions[currentSessionId].messages) || [];
 box.innerHTML = msgs.map(function(m) {
-return <div class="msg ${m.sender}">${m.text}</div>;
+return "" + m.text + "";
 }).join("");
 box.scrollTop = box.scrollHeight;
 }
@@ -243,17 +248,17 @@ localStorage.setItem("leo_api", document.getElementById("api-key-input").value.t
 alert("تم حفظ المفتاح!");
 }
 function changePass() {
-const p = document.getElementById("new-pass-input").value;
+var p = document.getElementById("new-pass-input").value;
 if (p) {
 localStorage.setItem("leo_pass", p);
 alert("تم تحديث كلمة السر!");
 }
 }
 function saveSecret() {
-const title = document.getElementById("secret-title").value;
-const val = document.getElementById("secret-val").value;
+var title = document.getElementById("secret-title").value;
+var val = document.getElementById("secret-val").value;
 if (!title || !val) return;
-const list = JSON.parse(localStorage.getItem("leo_vault") || "[]");
+var list = JSON.parse(localStorage.getItem("leo_vault") || "[]");
 list.push({ title: title, val: val });
 localStorage.setItem("leo_vault", JSON.stringify(list));
 document.getElementById("secret-title").value = "";
@@ -261,40 +266,35 @@ document.getElementById("secret-val").value = "";
 renderVault();
 }
 function renderVault() {
-const list = JSON.parse(localStorage.getItem("leo_vault") || "[]");
+var list = JSON.parse(localStorage.getItem("leo_vault") || "[]");
 document.getElementById("vault-list").innerHTML = list.map(function(item, i) {
-return <div class="card"> <strong>🔑 ${item.title}</strong> <p style="margin:6px 0; color:#cbd5e1;">${item.val}</p> <button type="button" onclick="deleteSecret(${i})" class="btn-danger" style="padding:6px; font-size:12px;">حذف</button> </div>;
+return "🔑 " + item.title + "" + item.val + "حذف";
 }).join("");
 }
 function deleteSecret(i) {
-const list = JSON.parse(localStorage.getItem("leo_vault") || "[]");
+var list = JSON.parse(localStorage.getItem("leo_vault") || "[]");
 list.splice(i, 1);
 localStorage.setItem("leo_vault", JSON.stringify(list));
 renderVault();
 }
 async function callLeo(promptText, includeHistory) {
-const apiKey = localStorage.getItem("leo_api");
+var apiKey = localStorage.getItem("leo_api");
 if (!apiKey) {
 return "من فضلك افتح (الذاكرة والإعدادات) تحت وحط مفتاح Google Gemini API المجاني الأول!";
 }
-const now = new Date().toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'long' });
-const memory = localStorage.getItem("leo_memory") || "لا توجد معلومات إضافية بعد.";
-const systemPrompt = `أنت 'ليو' (Leo)، برنامج ذكاء اصطناعي خارق يجمع قدرات ChatGPT و Gemini و Claude. مخترعك ومالكك الوحيد هو المستخدم.
-التاريخ والوقت الحالي الآن بالظبط هو: ${now}.
-معلومات المستخدم الأساسية (الذاكرة الموحدة): ${memory}.
-تعليمات صارمة:
-1. اتكلم باللهجة المصرية الذكية والواضحة، واشرح بالتفصيل لما يطلب منك.
-2. استخدم بحث Google الحي دائماً عشان تجيب أحدث أخبار ومعلومات اللحظة الحالية (${now}) وماتجيبش أي معلومات قديمة أبداً.
-3. ساعده في البرمجة، الأمن السيبراني الدفاعي والحماية، حل الامتحانات، الترجمة لكل اللغات، الوظائف، تنظيم المناسبات، وحل مشاكل التليفون والكمبيوتر.
-4. لو طلب فتح موقع أو مكان، اكتب الرابط بصيغة https://... عشان النظام ياخد إذنه قبل الفتح.`;let contextText = systemPrompt + "\n\n";
+var now = new Date().toLocaleString("ar-EG", { dateStyle: "full", timeStyle: "long" });
+var memory = localStorage.getItem("leo_memory") || "لا توجد معلومات إضافية بعد.";
+var systemPrompt = "أنت 'ليو' (Leo)، برنامج ذكاء اصطناعي خارق يجمع قدرات ChatGPT و Gemini و Claude. مخترعك ومالكك الوحيد هو المستخدم. التاريخ والوقت الحالي الآن: " + now + ". معلومات المستخدم الأساسية: " + memory + ". اتكلم باللهجة المصرية الذكية والواضحة، واستخدم بحث Google الحي دايماً عشان تجيب أحدث أخبار ومعلومات اللحظة الحالية.";
+var contextText = systemPrompt + "\n\n";
 if (includeHistory && sessions[currentSessionId]) {
-const recent = sessions[currentSessionId].messages.slice(-6);
-contextText += "سياق المحادثة الحالية:\n" + recent.map(function(m) {
-return ${m.sender === 'user' ? 'المستخدم' : 'ليو'}: ${m.text};
+var recent = sessions[currentSessionId].messages.slice(-6);
+contextText += "سياق المحادثة:\n" + recent.map(function(m) {
+return (m.sender === "user" ? "المستخدم" : "ليو") + ": " + m.text;
 }).join("\n") + "\n\n";
 }
-contextText += "طلب المستخدم الآن: " + promptText;try {
-const res = await fetch(https://googleapis.com{apiKey}, {
+contextText += "طلب المستخدم الآن: " + promptText;
+try {
+var res = await fetch("googleapis.com" + apiKey, {
 method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify({
@@ -302,9 +302,11 @@ contents: [{ parts: [{ text: contextText }] }],
 tools: [{ googleSearch: {} }]
 })
 });
-const data = await res.json();
-if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-return data.candidates[0].content.parts[0].text;
+var data = await res.json();
+var firstCandidate = data.candidates && data.candidates.at(0);
+var firstPart = firstCandidate && firstCandidate.content && firstCandidate.content.parts && firstCandidate.content.parts.at(0);
+if (firstPart && firstPart.text) {
+return firstPart.text;
 }
 return "حصلت مشكلة في الاتصال، تأكد من المفتاح والإنترنت.";
 } catch (e) {
@@ -312,21 +314,21 @@ return "تأكد من اتصالك بالإنترنت ومفتاح الـ API.";
 }
 }
 async function sendMsg() {
-const input = document.getElementById("user-msg");
-const text = input.value.trim();
+var input = document.getElementById("user-msg");
+var text = input.value.trim();
 if (!text) return;
 sessions[currentSessionId].messages.push({ sender: "user", text: text });
 input.value = "";
 renderChat();
 sessions[currentSessionId].messages.push({ sender: "leo", text: "ليو بيبحث في الإنترنت الآن..." });
 renderChat();
-const reply = await callLeo(text, true);
-sessions[currentSessionId].messages[sessions[currentSessionId].messages.length - 1].text = reply;
+var reply = await callLeo(text, true);
+sessions[currentSessionId].messages.at(-1).text = reply;
 saveSessions();
 renderChat();
-const urlMatch = reply.match(/https?://[^\s)]+/);
+var urlMatch = reply.match(/https?://[^\s)]+/);
 if (urlMatch) {
-pendingUrl = urlMatch[0];
+pendingUrl = urlMatch.at(0);
 document.getElementById("perm-text").innerText = "ليو بيستأذنك يفتح الرابط ده:\n" + pendingUrl;
 document.getElementById("perm-modal").style.display = "flex";
 }
@@ -339,22 +341,24 @@ window.open(pendingUrl, "_blank");
 pendingUrl = "";
 }
 function generateImage() {
-const prompt = document.getElementById("media-prompt").value.trim();
+var prompt = document.getElementById("media-prompt").value.trim();
 if (!prompt) {
 alert("اكتب وصف الصورة الأول!");
 return;
 }
-const url = https://pollinations.ai{encodeURIComponent(prompt)}?width=720&height=1280&nologo=true;
-document.getElementById("media-result").innerHTML =  <div class="card"> <p>جاري رسم الصورة بمقاس تيك توك...</p> <img class="gen-img" src="${url}" alt="Leo Image"> </div>;
+var url = "pollinations.ai" + encodeURIComponent(prompt) + "?width=720&height=1280&nologo=true";
+document.getElementById("media-result").innerHTML = "جاري رسم الصورة بمقاس تيك توك...";
 }
 async function generateTikTok() {
-const idea = document.getElementById("media-prompt").value.trim();
+var idea = document.getElementById("media-prompt").value.trim();
 if (!idea) {
 alert("اكتب فكرة الفيديو الأول!");
 return;
 }
-const resDiv = document.getElementById("media-result");
+var resDiv = document.getElementById("media-result");
 resDiv.innerHTML = "ليو بيكتب السكريبت وبيجهز المشاهد...";
-const script = await callLeo(اكتب لي سكريبت فيديو تيك توك قصير (أقل من دقيقة) باللهجة المصرية عن: "${idea}". قسمه إلى 4 مشاهد، واكتب في كل مشهد الكلام اللي هيتقال ووصف الصورة المناسبة ليه., false);
-resDiv.innerHTML = <div class="card" style="white-space: pre-wrap;">${script}</div>;
+var script = await callLeo("اكتب لي سكريبت فيديو تيك توك قصير (أقل من دقيقة) باللهجة المصرية عن: " + idea + ". قسمه إلى 4 مشاهد، واكتب في كل مشهد الكلام اللي هيتقال ووصف الصورة المناسبة ليه.", false);
+resDiv.innerHTML = "" + script + "";
 }
+
+
